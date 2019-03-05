@@ -1,0 +1,19 @@
+{{- if .Values.rbac.create }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app: {{ template "ppfc.name" . }}
+    chart: {{ template "ppfc.chart" . }}
+    component: {{ .Values.ppfc.name }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+  name: {{ template "ppfc.fullname" . }}
+subjects:
+- kind: ServiceAccount
+  name: {{ template "ppfc.serviceAccountName" . }}
+roleRef:
+  kind: Role
+  apiGroup: rbac.authorization.k8s.io
+  name: {{ template "ppfc.fullname" . }}
+{{- end }}

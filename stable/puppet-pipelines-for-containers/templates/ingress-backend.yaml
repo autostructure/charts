@@ -1,0 +1,38 @@
+
+{{- if .Values.ingressBackend.enabled -}}
+{{- $serviceName := include "ppfc.fullname" . -}}
+{{- $servicePort := .Values.ppfc.externalBackendPort -}}
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{ template "ppfc.fullname" . }}-backend
+  labels:
+    app: {{ template "ppfc.name" . }}
+    chart: {{ template "ppfc.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+  annotations:
+    {{- range $key, $value := .Values.ingressBackend.annotations }}
+      {{ $key }}: {{ $value | quote }}
+    {{- end }}
+spec:
+  # backend:
+  #   serviceName: {{ $serviceName }}
+  #   servicePort: {{ $servicePort }}
+{{- if .Values.ingressBackend.hosts }}
+  rules:
+  {{- range $host := .Values.ingressBackend.hosts }}
+  - host: {{ $host }}
+    http:
+      paths:
+        - path: /
+          backend:
+            serviceName: {{ $serviceName }}
+            servicePort: {{ $servicePort }}
+  {{- end -}}
+{{- end -}}
+  {{- if .Values.ingressBackend.tls }}
+  tls:
+{{ toYaml .Values.ingressBackend.tls | indent 4 }}
+  {{- end -}}
+{{- end -}}

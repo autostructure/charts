@@ -1,0 +1,34 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "ppfc.fullname" . }}
+  labels:
+    app: {{ template "ppfc.name" . }}
+    chart: {{ template "ppfc.chart" . }}
+    component: {{ .Values.ppfc.name }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+{{- if .Values.ppfc.service.annotations }}
+  annotations:
+{{ toYaml .Values.ppfc.service.annotations | indent 4 }}
+{{- end }}
+spec:
+  type: {{ .Values.ppfc.service.type }}
+
+  ports:
+  - port: {{ .Values.ppfc.externalConsolePort }}
+    targetPort: {{ .Values.ppfc.internalConsolePort }}
+    protocol: TCP
+    name: consoleport
+  - port: {{ .Values.ppfc.externalBackendPort }}
+    targetPort: {{ .Values.ppfc.internalBackendPort }}
+    protocol: TCP
+    name: backendport
+  - port: {{ .Values.ppfc.externalAgentServicePort }}
+    targetPort: {{ .Values.ppfc.internalAgentServicePort }}
+    protocol: TCP
+    name: agentport
+  selector:
+    app: {{ template "ppfc.name" . }}
+    component: "{{ .Values.ppfc.name }}"
+    release: {{ .Release.Name }}

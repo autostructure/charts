@@ -1,0 +1,7 @@
+Congratulations. You have just deployed Continuous Delivery for Puppet Enterprise!
+
+1. Get the Continuous Delivery for Puppet Enterprise URL by running these commands:
+
+   {{- range .Values.ingress.hosts }}
+     http://{{ . }}
+   {{- end }}

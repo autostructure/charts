@@ -1,0 +1,11 @@
+apiVersion: v1
+name: puppet-pipelines-for-containers
+home: https://puppet.com/products/puppet-pipelines
+version: 1.0.0
+appVersion: 3.3.10-516353
+description: Automated testing and promotion of infrastructure code across your environments. .
+keywords:
+- puppet
+- containers
+- continuous delivery
+icon: https://pipelines.puppet.com/images/puppet/dis-magenta-nav.svg

@@ -1,0 +1,155 @@
+# Default values for ppfc.
+# This is a YAML-formatted file.
+
+# Beware when changing values here. You should know what you are doing!
+# Access the values with {{ .Values.key.subkey }}
+
+# Common
+initContainerImage: "alpine:3.6"
+
+## Role Based Access Control
+## Ref: https://kubernetes.io/docs/admin/authorization/rbac/
+rbac:
+  create: true
+  role:
+    ## Rules to create. It follows the role specification
+    rules:
+    - apiGroups:
+      - ''
+      resources:
+      - services
+      - endpoints
+      - pods
+      verbs:
+      - get
+      - watch
+      - list
+
+## Service Account
+## Ref: https://kubernetes.io/docs/admin/service-accounts-admin/
+##
+serviceAccount:
+  create: true
+  ## The name of the ServiceAccount to use.
+  ## If not set and create is true, a name is generated using the fullname template
+  name:
+
+ingressAgent:
+  enabled: false
+  # Used to create an Ingress record.
+  hosts:
+    - ppfc-agent.domain.example
+  annotations:
+  # kubernetes.io/ingress.class: nginx
+  # kubernetes.io/tls-acme: "true"
+  labels:
+  # traffic-type: external
+  # traffic-type: internal
+  tls:
+  # Secrets must be manually created in the namespace.
+  # - secretName: chart-example-tls
+  #   hosts:
+  #     - ppfc-agent.domain.example
+
+ingressBackend:
+  enabled: false
+  # Used to create an Ingress record.
+  hosts:
+    - ppfc-backend.domain.example
+  annotations:
+  # kubernetes.io/ingress.class: nginx
+  # kubernetes.io/tls-acme: "true"
+  labels:
+  # traffic-type: external
+  # traffic-type: internal
+  tls:
+  # Secrets must be manually created in the namespace.
+  # - secretName: chart-example-tls
+  #   hosts:
+  #     - ppfc-backend.domain.example
+
+ingress:
+  enabled: false
+  # Used to create an Ingress record.
+  hosts:
+    - ppfc.domain.example
+  annotations:
+  # kubernetes.io/ingress.class: nginx
+  # kubernetes.io/tls-acme: "true"
+  labels:
+  # traffic-type: external
+  # traffic-type: internal
+  tls:
+  # Secrets must be manually created in the namespace.
+  # - secretName: chart-example-tls
+  #   hosts:
+  #     - ppfc.domain.example
+
+# Puppet Pipelines for Containers
+ppfc:
+  name: ppfc
+  image:
+    # repository: "docker.bintray.io/jfrog/cdpe-oss"
+    repository: "puppet/pipelines-for-containers"
+    # Note that by default we use appVersion to get image tag
+    # version: latest
+    pullPolicy: IfNotPresent
+
+  service:
+    name: ppfc
+    type: ClusterIP
+    annotations: {}
+  externalConsolePort: 8080
+  internalConsolePort: 8080
+  externalBackendPort: 8000
+  internalBackendPort: 8000
+  externalAgentServicePort: 7000
+  internalAgentServicePort: 7000
+
+  # DB initialization results
+  dbPrefix: ppfc-
+
+  # The following settings are to configure the frequency of the liveness and readiness probes
+  livenessProbe:
+    enabled: false
+    initialDelaySeconds: 180
+    failureThreshold: 10
+    timeoutSeconds: 10
+    periodSeconds: 10
+    successThreshold: 1
+
+  readinessProbe:
+    enabled: false
+    initialDelaySeconds: 60
+    failureThreshold: 10
+    timeoutSeconds: 10
+    periodSeconds: 10
+    successThreshold: 1
+  ## Uncomment the following resources definitions or pass them from command line
+  ## to control the cpu and memory resources allocated by the Kubernetes cluster
+  resources: {}
+  #   requests:
+  #     memory: "6Gi"
+  #     cpu: "2"
+  #   limits:
+  #     memory: "7Gi"
+  #     cpu: "3"
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+
+## Configuration values for the mysql dependency
+## ref: https://github.com/kubernetes/charts/blob/master/stable/mysql/README.md
+##
+mysql:
+  enabled: true
+  # mysqlRootPassword: ppfc
+  mysqlUser: ppfc
+  mysqlPassword: 'password1'
+  mysqlDatabase: ppfc
+  persistence:
+    enabled: true

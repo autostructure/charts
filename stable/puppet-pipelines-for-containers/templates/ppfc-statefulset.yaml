@@ -1,0 +1,100 @@
+apiVersion: apps/v1beta2
+kind: StatefulSet
+metadata:
+  name: {{ template "ppfc.fullname" . }}
+  labels:
+    app: {{ template "ppfc.name" . }}
+    chart: {{ template "ppfc.chart" . }}
+    component: {{ .Values.ppfc.name }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+spec:
+  serviceName: {{ template "ppfc.name" . }}
+  replicas: 1
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: {{ template "ppfc.name" . }}
+      role: {{ template "ppfc.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "ppfc.name" . }}
+        role: {{ template "ppfc.name" . }}
+        component: {{ .Values.ppfc.name }}
+        release: {{ .Release.Name }}
+    spec:
+      serviceAccountName: {{ template "ppfc.serviceAccountName" . }}
+      initContainers:
+      - name: "wait-for-db"
+        image: "{{ .Values.initContainerImage }}"
+        command:
+        - 'sh'
+        - '-c'
+        - >
+          until nc -z -w 2 {{ .Release.Name }}-mysql 3306 && echo database ok; do
+            sleep 2;
+          done;
+      containers:
+      - name: {{ .Values.ppfc.name }}
+        image: "{{ .Values.ppfc.image.repository }}:{{ default .Chart.AppVersion .Values.ppfc.image.version }}"
+        imagePullPolicy: {{ .Values.ppfc.image.pullPolicy }}
+        env:
+        - name: DB_ENDPOINT
+          value: 'mysql://{{ .Release.Name }}-mysql:3306/ppfc'
+        - name: USER
+          value: '{{ .Values.mysql.mysqlUser }}'
+        - name: MYSQL_PWD
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "ppfc.fullname" . }}
+              key: db-password
+        ports:
+        - containerPort: {{ .Values.ppfc.internalConsolePort }}
+          protocol: TCP
+          name: consoleport
+        - containerPort: {{ .Values.ppfc.internalBackendPort }}
+          protocol: TCP
+          name: backendport
+        - containerPort: {{ .Values.ppfc.internalAgentServicePort }}
+          protocol: TCP
+          name: agentport
+
+        resources:
+{{ toYaml .Values.ppfc.resources | indent 10 }}
+    {{- with .Values.ppfc.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.ppfc.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.ppfc.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+        {{- if .Values.ppfc.readinessProbe.enabled }}
+        readinessProbe:
+          httpGet:
+            path: '/'
+            port: 8080
+          initialDelaySeconds: {{ .Values.ppfc.readinessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.ppfc.readinessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.ppfc.readinessProbe.timeoutSeconds }}
+          failureThreshold: {{ .Values.ppfc.readinessProbe.failureThreshold }}
+          successThreshold: {{ .Values.ppfc.readinessProbe.successThreshold }}
+        {{- end }}
+        {{- if .Values.ppfc.livenessProbe.enabled }}
+        livenessProbe:
+          httpGet:
+            path: '/'
+            port: 8080
+          initialDelaySeconds: {{ .Values.ppfc.livenessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.ppfc.livenessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.ppfc.livenessProbe.timeoutSeconds }}
+          failureThreshold: {{ .Values.ppfc.livenessProbe.failureThreshold }}
+          successThreshold: {{ .Values.ppfc.livenessProbe.successThreshold }}
+        {{- end }}
