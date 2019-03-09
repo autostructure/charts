@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  labels:
+    app: ppfc
+  name: ppfc-mysql-db-pv
+spec:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 8Gi
+  hostPath:
+    path: /nfsroot-ead/work/ops/ddc/worker/compliance/ppfc/mysqldata3
+    type: ""
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: default-storage
